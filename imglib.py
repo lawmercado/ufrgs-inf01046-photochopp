@@ -1,7 +1,16 @@
 import numpy as np
+from skimage import io
 from sklearn.cluster import KMeans
 from sklearn.metrics import pairwise_distances_argmin
 from sklearn.utils import shuffle
+
+
+def read(file_name: str) -> np.ndarray:
+    return io.imread(file_name)
+
+
+def save(file_name: str, image: np.ndarray):
+    return io.imsave(file_name, image)
 
 
 def color_as_gray_scale(image: np.ndarray) -> np.ndarray:
@@ -17,11 +26,11 @@ def color_as_gray_scale(image: np.ndarray) -> np.ndarray:
 
 
 def transform_h_flip(image: np.ndarray) -> np.ndarray:
-    return np.flip(image, 1).copy().astype(np.uint8)
+    return np.flip(image, 1).astype(np.uint8)
 
 
 def transform_v_flip(image: np.ndarray) -> np.ndarray:
-    return np.flip(image, 0).copy().astype(np.uint8)
+    return np.flip(image, 0).astype(np.uint8)
 
 
 def quantization_random(image: np.ndarray, n_colors: int) -> np.ndarray:
@@ -34,7 +43,7 @@ def quantization_random(image: np.ndarray, n_colors: int) -> np.ndarray:
     return np.reshape(palette[labels], (width, height, palette.shape[1])).astype(np.uint8)
 
 
-def quantization_kmeans(image: np.ndarray, n_colors: int, sample_size: float = 0.5) -> np.ndarray:
+def quantization_kmeans(image: np.ndarray, n_colors: int) -> np.ndarray:
     width, height, channels = image.shape
     reshaped = np.reshape(image, (width * height, channels))
 
@@ -43,4 +52,3 @@ def quantization_kmeans(image: np.ndarray, n_colors: int, sample_size: float = 0
     palette = model.cluster_centers_
 
     return np.reshape(palette[labels], (width, height, palette.shape[1])).astype(np.uint8)
-

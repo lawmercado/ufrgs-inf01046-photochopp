@@ -1,10 +1,9 @@
 import sys
 
 import numpy as np
-from PyQt5 import QtWidgets, QtCore
-from PyQt5.QtGui import QPixmap, QImage, QMovie
-from PyQt5.QtWidgets import QWidget, QDesktopWidget, QFileDialog, QMessageBox, QRadioButton
-from skimage import io
+from PyQt5 import QtWidgets
+from PyQt5.QtGui import QPixmap, QImage
+from PyQt5.QtWidgets import QWidget, QDesktopWidget, QFileDialog, QMessageBox
 
 import imglib
 from gui.toolbox import Ui_toolbox as Toolbox
@@ -86,7 +85,7 @@ class Photochopp:
         file_name, _ = QFileDialog.getOpenFileName(self.toolbox_window, "Load an image", "",
                                                    "Image Files (*.jpg *.jpeg *.png)", options=options)
         if file_name:
-            self.original_image = io.imread(file_name)
+            self.original_image = imglib.read(file_name)
             self.original_image_extension = file_name.split(".")[-1]
 
             self.working_image = self.original_image.copy()
@@ -102,6 +101,7 @@ class Photochopp:
             self.working_image_window.resize(pixmap.width(), pixmap.height())
             self.working_image_window.setFixedSize(pixmap.width(), pixmap.height())
 
+            self.original_image_window.show()
             self.working_image_window.show()
 
             self.__on_image_loaded()
@@ -121,13 +121,19 @@ class Photochopp:
 
         center = QDesktopWidget().availableGeometry().center()
 
+        rect_toolbox = self.toolbox_window.frameGeometry()
+
         rect_original_image = self.original_image_window.frameGeometry()
         rect_original_image.moveCenter(center)
-        self.original_image_window.move(rect_original_image.topLeft())
+        point = rect_original_image.topLeft()
+        point.setX(int(rect_toolbox.x() - rect_original_image.width()))
+        self.original_image_window.move(point)
 
         rect_working_image = self.working_image_window.frameGeometry()
         rect_working_image.moveCenter(center)
-        self.working_image_window.move(rect_working_image.topLeft())
+        point = rect_working_image.topLeft()
+        point.setX(int(rect_toolbox.x() + rect_toolbox.width()))
+        self.working_image_window.move(point)
 
     def on_io_bt_save_click(self):
         options = QFileDialog.Options()
@@ -136,9 +142,9 @@ class Photochopp:
         if file_name:
             try:
                 if file_name.lower().endswith(('.png', '.jpg', '.jpeg')):
-                    io.imsave(file_name, self.working_image)
+                    imglib.save(file_name, self.working_image)
                 else:
-                    io.imsave(file_name + "." + self.original_image_extension, self.working_image)
+                    imglib.save(file_name + "." + self.original_image_extension, self.working_image)
 
                 QMessageBox.information(self.toolbox_window, "Message", "Image saved", QMessageBox.Ok)
             except IOError:
