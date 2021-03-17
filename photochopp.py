@@ -141,7 +141,7 @@ class Photochopp:
     def on_io_bt_load_click(self):
         options = QFileDialog.Options()
         file_name, _ = QFileDialog.getOpenFileName(self.toolbox_window, "Load an image", "",
-                                                   "Image Files (*.jpg *.jpeg *.png)", options=options)
+                                                   "Image Files (*.jpg *.jpeg)", options=options)
         if file_name:
             self.original_image = imglib.read(file_name)
             self.original_image_extension = file_name.split(".")[-1]
@@ -222,10 +222,10 @@ class Photochopp:
     def on_io_bt_save_click(self):
         options = QFileDialog.Options()
         file_name, _ = QFileDialog.getSaveFileName(self.toolbox_window, "Save working image", "",
-                                                   "Image Files (*.jpg *.jpeg *.png)", options=options)
+                                                   "Image Files (*.jpg *.jpeg)", options=options)
         if file_name:
             try:
-                if file_name.lower().endswith(('.png', '.jpg', '.jpeg')):
+                if file_name.lower().endswith((".jpg", ".jpeg")):
                     imglib.save(file_name, self.working_image)
                 else:
                     imglib.save(file_name + "." + self.original_image_extension, self.working_image)
@@ -387,7 +387,7 @@ class Photochopp:
     def on_match_io_bt_load_click(self):
         options = QFileDialog.Options()
         file_name, _ = QFileDialog.getOpenFileName(self.toolbox_window, "Load an image", "",
-                                                   "Image Files (*.jpg *.jpeg *.png)", options=options)
+                                                   "Image Files (*.jpg *.jpeg)", options=options)
         if file_name:
             self.__match_reference_image = imglib.read(file_name)
 
