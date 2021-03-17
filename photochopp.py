@@ -9,6 +9,8 @@ import imglib
 from gui.toolbox import Ui_toolbox as Toolbox
 from gui.view_original_image import Ui_view_original_image as OriginalImage
 from gui.view_working_image import Ui_view_working_image as WorkingImage
+from gui.view_histogram import Ui_view_histogram as Histogram
+from gui.view_histogram_matching import Ui_view_histogram_matching as HistogramMatching
 
 
 class Photochopp:
@@ -22,6 +24,15 @@ class Photochopp:
 
         self.working_image_window = QWidget()
         self.working_image_widgets = WorkingImage()
+
+        self.histogram_window = QWidget()
+        self.histogram_widgets = Histogram()
+
+        self.original_histogram_window = QWidget()
+        self.original_histogram_widgets = Histogram()
+
+        self.histogram_matching_window = QWidget()
+        self.histogram_matching_widgets = HistogramMatching()
 
         self.__setup_ui()
         self.__setup_events()
@@ -38,6 +49,12 @@ class Photochopp:
         self.original_image_widgets.setupUi(self.original_image_window)
 
         self.working_image_widgets.setupUi(self.working_image_window)
+
+        self.histogram_widgets.setupUi(self.histogram_window)
+        self.original_histogram_widgets.setupUi(self.original_histogram_window)
+        self.histogram_matching_widgets.setupUi(self.histogram_matching_window)
+
+        self.original_histogram_window.setWindowTitle("Photochopp - Original image histogram")
 
         center = QDesktopWidget().availableGeometry().center()
 
@@ -59,6 +76,14 @@ class Photochopp:
         self.toolbox_widgets.transform_bt_v_flip.clicked.connect(self.on_transform_bt_v_flip_click)
 
         self.toolbox_widgets.color_bt_luminance.clicked.connect(self.on_color_bt_luminance_click)
+        self.toolbox_widgets.color_bt_neg.clicked.connect(self.on_color_bt_neg_click)
+        self.toolbox_widgets.color_bt_bright.clicked.connect(self.on_color_bt_bright_click)
+        self.toolbox_widgets.color_bt_cont.clicked.connect(self.on_color_bt_cont_click)
+
+        self.toolbox_widgets.hist_bt_show.clicked.connect(self.on_hist_bt_show_click)
+        self.toolbox_widgets.hist_bt_show_original.clicked.connect(self.on_hist_bt_show_original_click)
+        self.toolbox_widgets.hist_bt_eq.clicked.connect(self.on_hist_bt_eq_click)
+        self.toolbox_widgets.hist_bt_lab_eq.clicked.connect(self.on_hist_bt_lab_eq_click)
 
         self.toolbox_widgets.quantization_bt_quantize.clicked.connect(self.on_quantization_bt_quantize_click)
 
@@ -66,6 +91,11 @@ class Photochopp:
         pixmap = QPixmap(self.__as_qimg(self.working_image))
 
         self.working_image_widgets.image.setPixmap(pixmap)
+
+        # Computes the histogram
+        pixmap = QPixmap(self.__as_qimg(imglib.render_histogram(imglib.get_histogram(self.working_image))))
+
+        self.histogram_widgets.image.setPixmap(pixmap)
 
     def __as_qimg(self, image: np.ndarray):
         shape = image.shape
@@ -101,6 +131,16 @@ class Photochopp:
             self.working_image_window.resize(pixmap.width(), pixmap.height())
             self.working_image_window.setFixedSize(pixmap.width(), pixmap.height())
 
+            pixmap = QPixmap(self.__as_qimg(imglib.render_histogram(imglib.get_histogram(self.working_image))))
+
+            self.original_histogram_widgets.image.setPixmap(pixmap)
+            self.original_histogram_window.resize(pixmap.width(), pixmap.height())
+            self.original_histogram_window.setFixedSize(pixmap.width(), pixmap.height())
+
+            self.histogram_widgets.image.setPixmap(pixmap)
+            self.histogram_window.resize(pixmap.width(), pixmap.height())
+            self.histogram_window.setFixedSize(pixmap.width(), pixmap.height())
+
             self.original_image_window.show()
             self.working_image_window.show()
 
@@ -114,8 +154,21 @@ class Photochopp:
 
         self.toolbox_widgets.transform_bt_h_flip.setEnabled(True)
         self.toolbox_widgets.transform_bt_v_flip.setEnabled(True)
+        self.toolbox_widgets.transform_bt_rotate.setEnabled(True)
+
+        self.toolbox_widgets.zoom_bt_zi.setEnabled(True)
+        self.toolbox_widgets.zoom_bt_zo.setEnabled(True)
 
         self.toolbox_widgets.color_bt_luminance.setEnabled(True)
+        self.toolbox_widgets.color_bt_neg.setEnabled(True)
+        self.toolbox_widgets.color_bt_bright.setEnabled(True)
+        self.toolbox_widgets.color_bt_cont.setEnabled(True)
+
+        self.toolbox_widgets.hist_bt_show.setEnabled(True)
+        self.toolbox_widgets.hist_bt_show_original.setEnabled(True)
+        self.toolbox_widgets.hist_bt_eq.setEnabled(True)
+        self.toolbox_widgets.hist_bt_lab_eq.setEnabled(True)
+        self.toolbox_widgets.hist_bt_show_match.setEnabled(True)
 
         self.toolbox_widgets.quantization_bt_quantize.setEnabled(True)
 
@@ -173,6 +226,43 @@ class Photochopp:
 
     def on_color_bt_luminance_click(self):
         self.working_image = imglib.color_as_gray_scale(self.working_image)
+
+        self.__reload_working_image()
+
+    def on_color_bt_neg_click(self):
+        self.working_image = imglib.get_negative(self.working_image)
+
+        self.__reload_working_image()
+
+    def on_color_bt_bright_click(self):
+        self.working_image = imglib.adjust_brightness(self.working_image, self.toolbox_widgets.color_spin_bright.value())
+
+        self.__reload_working_image()
+
+    def on_color_bt_cont_click(self):
+        self.working_image = imglib.adjust_contrast(self.working_image, self.toolbox_widgets.color_spin_cont.value())
+
+        self.__reload_working_image()
+
+    def on_hist_bt_show_click(self):
+        if self.histogram_window.isVisible():
+            self.histogram_window.close()
+        else:
+            self.histogram_window.show()
+
+    def on_hist_bt_show_original_click(self):
+        if self.original_histogram_window.isVisible():
+            self.original_histogram_window.close()
+        else:
+            self.original_histogram_window.show()
+
+    def on_hist_bt_eq_click(self):
+        self.working_image = imglib.histogram_equalization(self.working_image)
+
+        self.__reload_working_image()
+
+    def on_hist_bt_lab_eq_click(self):
+        self.working_image = imglib.lab_histogram_equalization(self.working_image)
 
         self.__reload_working_image()
 
