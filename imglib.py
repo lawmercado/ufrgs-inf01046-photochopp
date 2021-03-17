@@ -5,6 +5,44 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import pairwise_distances_argmin
 from sklearn.utils import shuffle
 
+kernels_3x3 = {
+    "gaussian": np.array(
+        [[0.0625, 0.125, 0.0625],
+         [ 0.125,  0.25,  0.125],
+         [0.0625, 0.125, 0.0625]]
+    ),
+    "laplacian": np.array(
+        [[ 0, -1,  0],
+         [-1,  4, -1],
+         [ 0, -1,  0]]
+    ),
+    "highpass": np.array(
+        [[-1, -1, -1],
+         [-1,  8, -1],
+         [-1, -1, -1]]
+    ),
+    "prewitt_hx": np.array(
+        [[-1, 0, 1],
+         [-1, 0, 1],
+         [-1, 0, 1]]
+    ),
+    "prewitt_hy": np.array(
+        [[-1, -1, -1],
+         [ 0,  0,  0],
+         [ 1,  1,  1]]
+    ),
+    "sobel_hx": np.array(
+        [[-1, 0, 1],
+         [-2, 0, 2],
+         [-1, 0, 1]]
+    ),
+    "sobel_hy": np.array(
+        [[-1, -2, -1],
+         [ 0,  0,  0],
+         [ 1,  2,  1]]
+    ),
+}
+
 
 def read(file_name: str) -> np.ndarray:
     return io.imread(file_name)
@@ -36,24 +74,24 @@ def transform_v_flip(image: np.ndarray) -> np.ndarray:
 
 
 def quantization_random(image: np.ndarray, n_colors: int) -> np.ndarray:
-    width, height, depth = image.shape
+    height, width, depth = image.shape
     reshaped = np.reshape(image, (width * height, depth))
 
     palette = shuffle(reshaped)[:n_colors]
     labels = pairwise_distances_argmin(reshaped, palette)
 
-    return np.reshape(palette[labels], (width, height, palette.shape[1])).astype(np.uint8)
+    return np.reshape(palette[labels], (height, width, palette.shape[1])).astype(np.uint8)
 
 
 def quantization_kmeans(image: np.ndarray, n_colors: int) -> np.ndarray:
-    width, height, channels = image.shape
+    height, width, channels = image.shape
     reshaped = np.reshape(image, (width * height, channels))
 
     model = KMeans(n_clusters=n_colors)
     labels = model.fit_predict(reshaped)
     palette = model.cluster_centers_
 
-    return np.reshape(palette[labels], (width, height, palette.shape[1])).astype(np.uint8)
+    return np.reshape(palette[labels], (height, width, palette.shape[1])).astype(np.uint8)
 
 
 def get_negative(image: np.ndarray) -> np.ndarray:
@@ -196,21 +234,92 @@ def histogram_match(image: np.ndarray, reference: np.ndarray) -> np.ndarray:
     return matched.astype(np.uint8)
 
 
-def convolute(image: np.ndarray, kernel: np.ndarray):
+def zoom_out(image: np.ndarray, sx: int, sy: int) -> np.ndarray:
+    zoomed_image = np.zeros((np.ceil(image.shape[0] / sy).astype(np.int),
+                             np.ceil(image.shape[1] / sx).astype(np.int),
+                             image.shape[2]))
+
+    i = j = 0
+
+    for x in range(0, image.shape[1], sx):
+        for y in range(0, image.shape[0], sy):
+            zoomed_image[j][i] = np.mean(image[y:y+sy, x:x+sx], axis=(0, 1))
+            j += 1
+
+        i += 1
+        j = 0
+
+    return zoomed_image.astype(np.uint8)
+
+
+def zoom_in(image: np.ndarray) -> np.ndarray:
+    zoomed_image = np.zeros((image.shape[0] + image.shape[0] - 1,
+                             image.shape[1] + image.shape[1] - 1,
+                             image.shape[2]))
+
+    i = j = 0
+
+    # Zoomed image will have blank lines/columns between them
+    for x in range(0, image.shape[1]):
+        for y in range(0, image.shape[0]):
+            zoomed_image[j][i] = image[y][x]
+            j += 2
+
+        i += 2
+        j = 0
+
+    for y in range(0, zoomed_image.shape[0], 2):
+        for x in range(0, zoomed_image.shape[1] - 2, 2):
+            mean = (zoomed_image[y][x] + zoomed_image[y][x + 2])/2
+            zoomed_image[y][x + 1] = mean
+
+    for x in range(0, zoomed_image.shape[1]):
+        for y in range(0, zoomed_image.shape[0] - 2, 2):
+            mean = (zoomed_image[y][x] + zoomed_image[y + 2][x])/2
+            zoomed_image[y + 1][x] = mean
+
+    return zoomed_image.astype(np.uint8)
+
+
+def rotate_cw(image: np.ndarray) -> np.ndarray:
+    rotated_image = np.zeros((image.shape[1], image.shape[0], image.shape[2]))
+
+    for x in range(0, image.shape[1]):
+        rotated_image[x] = image[::-1, x]
+
+    return rotated_image.astype(np.uint8)
+
+
+def rotate_ccw(image: np.ndarray) -> np.ndarray:
+    rotated_image = np.zeros((image.shape[1], image.shape[0], image.shape[2]))
+
+    for y in range(0, image.shape[0]):
+        rotated_image[:, y] = image[y, ::-1]
+
+    return rotated_image.astype(np.uint8)
+
+
+def convolute(image: np.ndarray, kernel: np.ndarray, add=0):
+    image = image if is_gray_scale_image(image) else color_as_gray_scale(image)
+
     convoluted_image = np.zeros(image.shape)
 
-    kw = np.floor(kernel.shape[0] / 2)
-    kh = np.floor(kernel.shape[1] / 2)
+    kh = np.floor(kernel.shape[0] / 2).astype(np.int)
+    kw = np.floor(kernel.shape[1] / 2).astype(np.int)
 
-    for y in range(kh, image.shape[1] - kh - 1):
-        for x in range(kw, image.shape[0] - kw - 1):
+    for y in range(kh, image.shape[0] - kh):
+        for x in range(kw, image.shape[1] - kw):
             result = 0
 
             for i in range(-kh, kh + 1):
                 for j in range(-kw, kw + 1):
-                    result += kernel[kw + j][kh + i] * image[x - j][y - i]
+                    result += kernel[kh + i][kw + j] * image[y - i][x - j]
 
-            convoluted_image[x][y] = result
+            convoluted_image[y][x] = result
+
+    convoluted_image = convoluted_image + add
+    convoluted_image[convoluted_image > 255] = 255
+    convoluted_image[convoluted_image < 0] = 0
 
     return convoluted_image.astype(np.uint8)
 

@@ -45,9 +45,9 @@
       <property name="geometry">
        <rect>
         <x>0</x>
-        <y>-643</y>
+        <y>-334</y>
         <width>266</width>
-        <height>1123</height>
+        <height>1198</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -169,12 +169,36 @@
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="transform_bt_rotate">
+           <widget class="Line" name="transform_line_1">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="transform_bt_rotate_cw">
             <property name="enabled">
              <bool>false</bool>
             </property>
             <property name="text">
-             <string>Rotate 90°</string>
+             <string>Rotate clockwise</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="transform_bt_rotate_ccw">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="text">
+             <string>Rotate counterclockwise</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="Line" name="transform_line_2">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
             </property>
            </widget>
           </item>
@@ -191,32 +215,9 @@
             </property>
             <layout class="QGridLayout" name="gridLayout_3">
              <item row="3" column="1">
-              <widget class="QSpinBox" name="zoom_spin_vf"/>
-             </item>
-             <item row="2" column="1">
-              <widget class="QSpinBox" name="zoom_spin_hf"/>
-             </item>
-             <item row="0" column="0" colspan="2">
-              <widget class="QPushButton" name="zoom_bt_zi">
-               <property name="enabled">
-                <bool>false</bool>
-               </property>
-               <property name="text">
-                <string>Zoom in (2x2)</string>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="0">
-              <widget class="QLabel" name="zoom_label_hf">
-               <property name="text">
-                <string>Hor. factor</string>
-               </property>
-              </widget>
-             </item>
-             <item row="3" column="0">
-              <widget class="QLabel" name="zoom_label_vf">
-               <property name="text">
-                <string>Ver. factor</string>
+              <widget class="QSpinBox" name="zoom_spin_vf">
+               <property name="minimum">
+                <number>1</number>
                </property>
               </widget>
              </item>
@@ -234,6 +235,37 @@
               <widget class="Line" name="zoom_line_1">
                <property name="orientation">
                 <enum>Qt::Horizontal</enum>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="0">
+              <widget class="QLabel" name="zoom_label_vf">
+               <property name="text">
+                <string>Ver. factor</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QSpinBox" name="zoom_spin_hf">
+               <property name="minimum">
+                <number>1</number>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QLabel" name="zoom_label_hf">
+               <property name="text">
+                <string>Hor. factor</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="0" colspan="2">
+              <widget class="QPushButton" name="zoom_bt_zi">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
+               <property name="text">
+                <string>Zoom in (2x2)</string>
                </property>
               </widget>
              </item>
@@ -328,6 +360,25 @@
             </property>
             <property name="singleStep">
              <double>0.010000000000000</double>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="conv_group">
+         <property name="title">
+          <string>Filters</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_5">
+          <item>
+           <widget class="QPushButton" name="conv_bt_show">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="text">
+             <string>Convolute...</string>
             </property>
            </widget>
           </item>
