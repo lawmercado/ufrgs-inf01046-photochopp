@@ -41,6 +41,8 @@ class Photochopp:
         self.original_image_extension = None
         self.working_image = None
 
+        self.__match_reference_image = None
+
         self.toolbox_window.show()
 
     def __setup_ui(self):
@@ -84,6 +86,10 @@ class Photochopp:
         self.toolbox_widgets.hist_bt_show_original.clicked.connect(self.on_hist_bt_show_original_click)
         self.toolbox_widgets.hist_bt_eq.clicked.connect(self.on_hist_bt_eq_click)
         self.toolbox_widgets.hist_bt_lab_eq.clicked.connect(self.on_hist_bt_lab_eq_click)
+        self.toolbox_widgets.hist_bt_show_match.clicked.connect(self.on_hist_bt_show_match_click)
+
+        self.histogram_matching_widgets.match_bt_io_load.clicked.connect(self.on_match_io_bt_load_click)
+        self.histogram_matching_widgets.match_bt_match.clicked.connect(self.on_match_bt_match_click)
 
         self.toolbox_widgets.quantization_bt_quantize.clicked.connect(self.on_quantization_bt_quantize_click)
 
@@ -102,13 +108,14 @@ class Photochopp:
 
         if len(shape) == 3:
             height, width, _ = shape
+
             bytes_per_line = 3 * width
 
             return QImage(image.data, width, height, bytes_per_line, QImage.Format_RGB888)
         else:
             height, width = shape
 
-            return QImage(image.data, width, height, QImage.Format_Grayscale8)
+            return QImage(image.data, width, height, width, QImage.Format_Grayscale8)
 
     def on_io_bt_load_click(self):
         options = QFileDialog.Options()
@@ -256,6 +263,9 @@ class Photochopp:
         else:
             self.original_histogram_window.show()
 
+    def on_hist_bt_show_match_click(self):
+        self.histogram_matching_window.show()
+
     def on_hist_bt_eq_click(self):
         self.working_image = imglib.histogram_equalization(self.working_image)
 
@@ -263,6 +273,29 @@ class Photochopp:
 
     def on_hist_bt_lab_eq_click(self):
         self.working_image = imglib.lab_histogram_equalization(self.working_image)
+
+        self.__reload_working_image()
+
+    def on_match_io_bt_load_click(self):
+        options = QFileDialog.Options()
+        file_name, _ = QFileDialog.getOpenFileName(self.toolbox_window, "Load an image", "",
+                                                   "Image Files (*.jpg *.jpeg *.png)", options=options)
+        if file_name:
+            self.__match_reference_image = imglib.read(file_name)
+
+            pixmap = QPixmap(self.__as_qimg(self.__match_reference_image))
+
+            self.histogram_matching_widgets.image.setPixmap(pixmap)
+
+            # Computes the histogram
+            pixmap = QPixmap(self.__as_qimg(imglib.render_histogram(imglib.get_histogram(self.__match_reference_image))))
+
+            self.histogram_matching_widgets.hist.setPixmap(pixmap)
+
+            self.histogram_matching_widgets.match_bt_match.setEnabled(True)
+
+    def on_match_bt_match_click(self):
+        self.working_image = imglib.histogram_match(self.working_image, self.__match_reference_image)
 
         self.__reload_working_image()
 

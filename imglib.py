@@ -20,8 +20,7 @@ def is_gray_scale_image(image: np.ndarray) -> bool:
 
 def color_as_gray_scale(image: np.ndarray) -> np.ndarray:
     if not is_gray_scale_image(image):
-        luminance = 0.299 * image[:, :, 0] + 0.587 * image[:, :, 1] \
-                    + 0.114 * image[:, :, 2]
+        luminance = 0.299 * image[:, :, 0] + 0.587 * image[:, :, 1] + 0.114 * image[:, :, 2]
 
         return luminance.astype(np.uint8)
     else:
@@ -107,6 +106,8 @@ def render_histogram(histogram: np.ndarray) -> np.ndarray:
     data = np.fromstring(figure.canvas.tostring_rgb(), dtype=np.uint8, sep='')
     data = data.reshape(figure.canvas.get_width_height()[::-1] + (3,))
 
+    plt.close()
+
     return data
 
 
@@ -186,7 +187,7 @@ def histogram_match(image: np.ndarray, reference: np.ndarray) -> np.ndarray:
                 closest = j
                 difference = np.abs(cum_histogram_ref[j] - cum_histogram_image[i])
 
-        hm[i] = cum_histogram_ref[closest]
+        hm[i] = closest
 
     for x in range(0, image.shape[0]):
         for y in range(0, image.shape[1]):

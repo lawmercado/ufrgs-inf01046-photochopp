@@ -29,14 +29,14 @@
     </widget>
    </item>
    <item row="1" column="0">
-    <widget class="QPushButton" name="bt_io_load">
+    <widget class="QPushButton" name="match_bt_io_load">
      <property name="text">
       <string>Load image</string>
      </property>
     </widget>
    </item>
    <item row="1" column="1">
-    <widget class="QPushButton" name="bt_match">
+    <widget class="QPushButton" name="match_bt_match">
      <property name="enabled">
       <bool>false</bool>
      </property>
