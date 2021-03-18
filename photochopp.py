@@ -63,7 +63,7 @@ class Photochopp:
         self.original_histogram_widgets.setupUi(self.original_histogram_window)
         self.histogram_matching_widgets.setupUi(self.histogram_matching_window)
 
-        self.original_histogram_window.setWindowTitle("Photochopp - Original image histogram")
+        self.original_histogram_window.setWindowTitle("Photochopp - Original image luminance histogram")
 
         center = QDesktopWidget().availableGeometry().center()
 

@@ -27,6 +27,6 @@ class Ui_view_histogram(object):
 
     def retranslateUi(self, view_histogram):
         _translate = QtCore.QCoreApplication.translate
-        view_histogram.setWindowTitle(_translate("view_histogram", "Photochopp - Working image histogram"))
+        view_histogram.setWindowTitle(_translate("view_histogram", "Photochopp - Working image luminance histogram"))
         self.image.setText(_translate("view_histogram", "Placeholder for the working image"))
 

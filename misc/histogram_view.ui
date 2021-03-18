@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Photochopp - Working image histogram</string>
+   <string>Photochopp - Working image luminance histogram</string>
   </property>
   <property name="windowIcon">
    <iconset theme="insert-image">
